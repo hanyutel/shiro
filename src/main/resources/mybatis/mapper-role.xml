@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.spring.shiro.dao.RoleDao">
+    <select id="queryRolesByLoginacct" resultType="com.atguigu.spring.shiro.bean.Role">
+        select
+            *
+        from t_role
+        where id in (
+            select 
+                roleid
+            from t_user_role
+            where userid = (
+                select
+                    id
+                from t_user
+                where loginacct = #{loginacct}
+            )
+        )
+    </select>
+</mapper>

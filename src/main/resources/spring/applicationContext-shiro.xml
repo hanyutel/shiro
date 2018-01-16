@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.0.xsd">
+    
+    <!-- 盐值加密 -->
+    <bean id="saltMatcher" class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+        <property name="hashAlgorithmName" value="md5"></property>
+        <property name="hashIterations" value="2" />
+    </bean>
+    
+    <!-- 用户验证对象 -->
+    <bean id="userRealm" class="cn.hanyuweb.shiro.realm.UserRealm">
+        <property name="credentialsMatcher" ref="saltMatcher"></property>
+    </bean>
+    
+    <bean id="redirectUrlFilter" class="cn.hanyuweb.shiro.filter.AuthSuccessRedirectUrlFilter">
+        <property name="loginUrl" value="/login" />
+    </bean>
+    <bean id="logout" class="org.apache.shiro.web.filter.authc.LogoutFilter"> 
+        <property name="redirectUrl" value="/demo" /> 
+    </bean>
+    
+    <!-- 会话Cookie模板 -->  
+    <bean id="sessionIdCookie" class="org.apache.shiro.web.servlet.SimpleCookie">  
+        <constructor-arg value="sid"/>  
+        <property name="httpOnly" value="true"/>  
+        <property name="maxAge" value="-1"/>  
+    </bean>  
+    <bean id="rememberMeCookie" class="org.apache.shiro.web.servlet.SimpleCookie">  
+        <constructor-arg value="rememberMe"/>  
+        <property name="httpOnly" value="true"/>  
+        <property name="maxAge" value="1209600"/><!-- 14天 -->  
+    </bean>
+    <!-- rememberMe管理器 -->  
+    <bean id="rememberMeManager" class="org.apache.shiro.web.mgt.CookieRememberMeManager">  
+        <property name="cipherKey" value="#{T(org.apache.shiro.codec.Base64).decode('4AvVhmFLUs0KTA3Kprsdag==')}"/>  
+        <property name="cookie" ref="rememberMeCookie"/>  
+    </bean>
+    
+	<!-- 安全管理器 -->  
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">  
+	    <property name="realm" ref="userRealm"></property>
+	    <property name="rememberMeManager" ref="rememberMeManager"></property>
+	</bean>
+    
+    <!-- Shiro的Web过滤器 -->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <!-- 认证安全管理器 -->
+        <property name="securityManager" ref="securityManager" />
+        <!-- 自定义Shiro内部过滤处理器，用于覆盖默认的过滤处理-->
+        <property name="filters">
+            <util:map>
+                <entry key="authc" value-ref="redirectUrlFilter" />
+                <entry key="logout" value-ref="logout"></entry>
+            </util:map>
+        </property>
+        <!-- 未认证（登陆）时，跳转的路径（重定向） -->
+        <property name="loginUrl" value="/login" />
+        <!-- 未授权时，跳转的路径（重定向） -->
+        <property name="unauthorizedUrl" value="/unauthorized"/>
+        <!-- 过滤匹配规则（什么样的请求路径执行什么样的过滤验证）
+        anon : 匿名 (anonymous)
+        authc : 认证
+        user : 身份验证通过或RememberMe登录的都可以
+        logout : 退出
+        roles[admin] : 包含的角色
+        perms[user:edit] : 包含的权限
+         -->
+        <property name="filterChainDefinitions">
+            <value>
+                /**/*.* = anon
+                /       = anon
+                /index  = anon
+                /demo  = anon
+                /assets/** = anon
+                /unauthorized = anon
+                /register = anon
+                /login = anon
+                /dologin = anon
+                /guest/** = anon
+                /user/** = user, roles[admin]
+                /logout = logout
+                /** = user
+            </value>
+        </property>
+    </bean>
+</beans>

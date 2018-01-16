@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<!-- Mybatis核心配置标签 -->
+<configuration>
+
+  <settings>
+      <setting name="lazyLoadingEnabled" value="true"/>
+      <setting name="aggressiveLazyLoading" value="false"/>
+  </settings>
+
+  <typeAliases>
+      <typeAlias type="com.atguigu.spring.shiro.bean.User" alias="user"/>
+  </typeAliases>
+  
+  <mappers>
+    <mapper resource="mybatis/mapper-user.xml"/>
+  </mappers>
+</configuration>
